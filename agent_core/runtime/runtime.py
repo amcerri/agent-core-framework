@@ -7,15 +7,20 @@ execution lifecycle, routing, and orchestration.
 from datetime import datetime, timezone
 from typing import Any
 
-from agent_core.configuration.schemas import AgentCoreConfig, RuntimeConfig
+from agent_core.configuration.schemas import AgentCoreConfig
 from agent_core.contracts.agent import Agent, AgentInput, AgentResult
 from agent_core.contracts.execution_context import ExecutionContext
 from agent_core.contracts.observability import ComponentType, CorrelationFields
+from agent_core.contracts.service import Service
+from agent_core.contracts.tool import Tool
+from agent_core.governance.budget import BudgetTracker
+from agent_core.observability.interface import ObservabilitySink
 from agent_core.observability.logging import get_logger
+from agent_core.observability.noop import NoOpObservabilitySink
+from agent_core.runtime.action_execution import ActionExecutionError, ActionExecutor
 from agent_core.runtime.execution_context import create_execution_context
 from agent_core.runtime.lifecycle import LifecycleEvent, LifecycleManager, LifecycleState
 from agent_core.runtime.routing import Router, RoutingError
-from agent_core.utils.ids import generate_correlation_id, generate_run_id
 
 
 class Runtime:
@@ -29,6 +34,9 @@ class Runtime:
         self,
         config: AgentCoreConfig,
         agents: dict[str, Agent] | None = None,
+        tools: dict[str, Tool] | None = None,
+        services: dict[str, Service] | None = None,
+        observability_sink: ObservabilitySink | None = None,
     ):
         """Initialize runtime.
 
@@ -36,9 +44,17 @@ class Runtime:
             config: Runtime configuration.
             agents: Optional dictionary of agent_id -> Agent instances.
                 If None, agents must be registered later.
+            tools: Optional dictionary of tool_id -> Tool instances.
+                If None, tools must be registered later.
+            services: Optional dictionary of service_id -> Service instances.
+                If None, services must be registered later.
+            observability_sink: Optional observability sink. If None, uses NoOpObservabilitySink.
         """
         self.config = config
         self.agents: dict[str, Agent] = agents or {}
+        self.tools: dict[str, Tool] = tools or {}
+        self.services: dict[str, Service] = services or {}
+        self.observability_sink = observability_sink or NoOpObservabilitySink()
         self.router = Router(self.agents)
 
         # Validate runtime config is present
@@ -54,6 +70,26 @@ class Runtime:
         self.agents[agent.agent_id] = agent
         # Update router with new agents
         self.router = Router(self.agents)
+
+    def register_tool(self, tool: Tool) -> None:
+        """Register a tool with the runtime.
+
+        Args:
+            tool: Tool instance to register.
+        """
+        if tool.tool_id in self.tools:
+            raise ValueError(f"Tool with ID '{tool.tool_id}' already registered.")
+        self.tools[tool.tool_id] = tool
+
+    def register_service(self, service: Service) -> None:
+        """Register a service with the runtime.
+
+        Args:
+            service: Service instance to register.
+        """
+        if service.service_id in self.services:
+            raise ValueError(f"Service with ID '{service.service_id}' already registered.")
+        self.services[service.service_id] = service
 
     def execute_agent(
         self,
@@ -143,8 +179,59 @@ class Runtime:
                 extra={
                     "agent_id": agent.agent_id,
                     "status": result.status,
+                    "action_count": len(result.actions),
                 },
             )
+
+            # Execute actions requested by agent
+            if result.actions:
+                logger.info(
+                    "Executing agent-requested actions",
+                    extra={"action_count": len(result.actions)},
+                )
+
+                # Initialize budget tracker for this execution
+                budget_tracker = BudgetTracker(context)
+
+                # Create action executor
+                action_executor = ActionExecutor(
+                    context=context,
+                    config=self.config,
+                    tools=self.tools,
+                    services=self.services,
+                    sink=self.observability_sink,
+                    budget_tracker=budget_tracker,
+                )
+
+                # Execute each action
+                action_results = []
+                for action in result.actions:
+                    try:
+                        action_result = action_executor.execute_action(action)
+                        action_results.append(action_result)
+                    except ActionExecutionError as e:
+                        logger.error(
+                            "Action execution failed",
+                            extra={"action": action, "error": str(e)},
+                        )
+                        # Add error to result
+                        result.errors.append(
+                            {
+                                "type": "action_execution_error",
+                                "action": action,
+                                "error": str(e),
+                            }
+                        )
+                        # Continue with other actions (non-blocking for now)
+                        # In a full implementation, this might be configurable
+
+                logger.info(
+                    "Action execution completed",
+                    extra={
+                        "total_actions": len(result.actions),
+                        "successful_actions": len(action_results),
+                    },
+                )
 
             # Transition based on result
             if result.status == "success":
@@ -182,4 +269,3 @@ class Runtime:
         # Note: This is a simplified version. In a full implementation,
         # lifecycle events would be tracked per execution.
         return []
-

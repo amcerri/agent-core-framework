@@ -142,9 +142,7 @@ def ensure_immutable(context: ExecutionContext) -> ExecutionContext:
     """
     if not context.model_config.get("frozen", False):
         raise ValueError(
-            "ExecutionContext must be immutable (frozen). "
-            "This indicates a contract violation."
+            "ExecutionContext must be immutable (frozen). This indicates a contract violation."
         )
 
     return context
-

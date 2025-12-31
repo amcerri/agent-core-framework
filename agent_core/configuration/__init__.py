@@ -22,10 +22,16 @@ from agent_core.configuration.schemas import (
     ServiceConfig,
     ToolConfig,
 )
+from agent_core.configuration.validation import (
+    apply_environment_overrides,
+    validate_and_apply_overrides,
+    validate_config,
+)
 
 __all__ = [
     "AgentCoreConfig",
     "AgentConfig",
+    "apply_environment_overrides",
     "ConfigurationError",
     "EnvironmentConfig",
     "FlowConfig",
@@ -37,5 +43,7 @@ __all__ = [
     "ToolConfig",
     "load_config",
     "load_config_from_dict",
+    "validate_and_apply_overrides",
+    "validate_config",
 ]
 

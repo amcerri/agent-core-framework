@@ -107,4 +107,3 @@ class Router:
             Agent instance if found, None otherwise.
         """
         return self.agents.get(agent_id)
-

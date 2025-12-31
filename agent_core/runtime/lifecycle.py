@@ -56,7 +56,9 @@ class LifecycleManager:
         self.state = LifecycleState.INITIALIZING
         self.events: list[tuple[LifecycleEvent, dict[str, Any]]] = []
 
-    def transition_to(self, new_state: LifecycleState, metadata: dict[str, Any] | None = None) -> None:
+    def transition_to(
+        self, new_state: LifecycleState, metadata: dict[str, Any] | None = None
+    ) -> None:
         """Transition to a new lifecycle state.
 
         Args:
@@ -130,4 +132,3 @@ class LifecycleManager:
             LifecycleState.FAILED,
             LifecycleState.TERMINATED,
         }
-

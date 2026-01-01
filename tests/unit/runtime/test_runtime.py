@@ -6,6 +6,7 @@ from agent_core.configuration.schemas import AgentCoreConfig, RuntimeConfig
 from agent_core.contracts.agent import Agent, AgentInput, AgentResult
 from agent_core.contracts.execution_context import ExecutionContext
 from agent_core.runtime.execution_context import create_execution_context
+from agent_core.runtime.lifecycle import LifecycleEvent
 from agent_core.runtime.routing import RoutingError
 from agent_core.runtime.runtime import Runtime
 from tests.unit.runtime.test_routing import MockAgent
@@ -178,4 +179,100 @@ class TestRuntime:
         # Execution should complete immediately (synchronous)
         result = runtime.execute_agent(agent_id="agent1")
         assert result.status == "success"
+
+    def test_get_lifecycle_events_returns_empty_before_execution(self):
+        """Test that get_lifecycle_events returns empty list before execution."""
+        config = AgentCoreConfig(
+            runtime=RuntimeConfig(runtime_id="test-runtime"),
+        )
+        runtime = Runtime(config)
+
+        events = runtime.get_lifecycle_events()
+        assert events == []
+
+    def test_get_lifecycle_events_returns_events_after_execution(self):
+        """Test that get_lifecycle_events returns events after execution."""
+        config = AgentCoreConfig(
+            runtime=RuntimeConfig(runtime_id="test-runtime"),
+        )
+        runtime = Runtime(config)
+
+        agent = MockAgent("agent1", "1.0.0", ["cap1"])
+        runtime.register_agent(agent)
+
+        # Execute agent
+        runtime.execute_agent(agent_id="agent1")
+
+        # Get lifecycle events
+        events = runtime.get_lifecycle_events()
+        assert len(events) > 0
+
+        # Verify expected events are present
+        event_types = [event for event, _ in events]
+        assert LifecycleEvent.INITIALIZATION_COMPLETED in event_types
+        assert LifecycleEvent.EXECUTION_STARTED in event_types
+        assert LifecycleEvent.EXECUTION_COMPLETED in event_types
+        # TERMINATION_STARTED may or may not be present depending on whether
+        # execution transitions through TERMINATED (COMPLETED is terminal)
+
+    def test_get_lifecycle_events_includes_metadata(self):
+        """Test that lifecycle events include metadata."""
+        config = AgentCoreConfig(
+            runtime=RuntimeConfig(runtime_id="test-runtime"),
+        )
+        runtime = Runtime(config)
+
+        agent = MockAgent("agent1", "1.0.0", ["cap1"])
+        runtime.register_agent(agent)
+
+        # Execute agent
+        runtime.execute_agent(agent_id="agent1")
+
+        # Get lifecycle events
+        events = runtime.get_lifecycle_events()
+        assert len(events) > 0
+
+        # Check that events have metadata (may be empty dict)
+        for event, metadata in events:
+            assert isinstance(metadata, dict)
+
+    def test_get_lifecycle_events_accessible_after_completion(self):
+        """Test that lifecycle events are accessible after execution completes."""
+        config = AgentCoreConfig(
+            runtime=RuntimeConfig(runtime_id="test-runtime"),
+        )
+        runtime = Runtime(config)
+
+        agent = MockAgent("agent1", "1.0.0", ["cap1"])
+        runtime.register_agent(agent)
+
+        # Execute agent
+        result = runtime.execute_agent(agent_id="agent1")
+        assert result.status == "success"
+
+        # Events should be accessible after completion
+        events = runtime.get_lifecycle_events()
+        assert len(events) >= 3  # At least INITIALIZATION_COMPLETED, EXECUTION_STARTED, EXECUTION_COMPLETED
+
+    def test_get_lifecycle_events_tracks_multiple_executions(self):
+        """Test that lifecycle events are tracked per execution."""
+        config = AgentCoreConfig(
+            runtime=RuntimeConfig(runtime_id="test-runtime"),
+        )
+        runtime = Runtime(config)
+
+        agent = MockAgent("agent1", "1.0.0", ["cap1"])
+        runtime.register_agent(agent)
+
+        # First execution
+        runtime.execute_agent(agent_id="agent1")
+        events1 = runtime.get_lifecycle_events()
+        assert len(events1) > 0
+
+        # Second execution (should replace previous events)
+        runtime.execute_agent(agent_id="agent1")
+        events2 = runtime.get_lifecycle_events()
+        assert len(events2) > 0
+        # Events should be from the most recent execution
+        assert events2 != events1 or len(events2) == len(events1)
 

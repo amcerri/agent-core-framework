@@ -101,8 +101,48 @@ class TestLifecycleManager:
         lifecycle.transition_to(LifecycleState.EXECUTING, {"step": 1})
 
         events = lifecycle.get_events()
-        assert len(events) >= 1
+        assert len(events) >= 2
         # Check that metadata is preserved
-        event_metadata = dict(events)
-        assert "metadata" in event_metadata.get(LifecycleEvent.INITIALIZATION_COMPLETED, {})
+        event_dict = {event: metadata for event, metadata in events}
+        assert LifecycleEvent.INITIALIZATION_COMPLETED in event_dict
+        assert event_dict[LifecycleEvent.INITIALIZATION_COMPLETED]["metadata"] == "value"
+        assert LifecycleEvent.EXECUTION_STARTED in event_dict
+        assert event_dict[LifecycleEvent.EXECUTION_STARTED]["step"] == 1
+
+    def test_all_lifecycle_events_tracked(self):
+        """Test that all lifecycle transitions generate events."""
+        context = create_execution_context(initiator="user:test")
+        lifecycle = LifecycleManager(context)
+
+        # Complete lifecycle (COMPLETED is terminal, so TERMINATED is only from EXECUTING)
+        lifecycle.transition_to(LifecycleState.READY)
+        lifecycle.transition_to(LifecycleState.EXECUTING)
+        lifecycle.transition_to(LifecycleState.TERMINATED)
+
+        events = lifecycle.get_events()
+        event_types = [event for event, _ in events]
+        
+        assert LifecycleEvent.INITIALIZATION_COMPLETED in event_types
+        assert LifecycleEvent.EXECUTION_STARTED in event_types
+        assert LifecycleEvent.TERMINATION_STARTED in event_types
+        assert len(events) == 3
+
+    def test_events_accessible_after_completion(self):
+        """Test that events are accessible after lifecycle completes."""
+        context = create_execution_context(initiator="user:test")
+        lifecycle = LifecycleManager(context)
+
+        lifecycle.transition_to(LifecycleState.READY)
+        lifecycle.transition_to(LifecycleState.EXECUTING)
+        lifecycle.transition_to(LifecycleState.COMPLETED)
+        
+        # Verify lifecycle is terminal
+        assert lifecycle.is_terminal()
+        
+        # Events should still be accessible
+        events = lifecycle.get_events()
+        assert len(events) == 3
+        assert events[0][0] == LifecycleEvent.INITIALIZATION_COMPLETED
+        assert events[1][0] == LifecycleEvent.EXECUTION_STARTED
+        assert events[2][0] == LifecycleEvent.EXECUTION_COMPLETED
 

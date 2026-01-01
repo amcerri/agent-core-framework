@@ -6,7 +6,7 @@ from agent_core.agents.base import BaseAgent
 from agent_core.configuration.schemas import AgentCoreConfig, FlowConfig, RuntimeConfig
 from agent_core.contracts.agent import AgentInput, AgentResult
 from agent_core.contracts.execution_context import ExecutionContext
-from agent_core.orchestration.flow_engine import FlowEngine, FlowExecutionError
+from agent_core.orchestration.flow_engine import FlowExecutionError, SimpleFlowEngine
 from agent_core.runtime.execution_context import create_execution_context
 from agent_core.runtime.runtime import Runtime
 
@@ -87,7 +87,7 @@ class TestFlowExecution:
         """Test executing a simple flow."""
         context = create_execution_context(initiator="user:test")
 
-        engine = FlowEngine(
+        engine = SimpleFlowEngine(
             flow=simple_flow_config,
             context=context,
             runtime=mock_runtime,
@@ -125,7 +125,7 @@ class TestFlowExecution:
 
         context = create_execution_context(initiator="user:test")
 
-        engine = FlowEngine(
+        engine = SimpleFlowEngine(
             flow=flow_config,
             context=context,
             runtime=mock_runtime,
@@ -154,7 +154,7 @@ class TestFlowExecution:
 
         context = create_execution_context(initiator="user:test")
 
-        engine = FlowEngine(
+        engine = SimpleFlowEngine(
             flow=flow_config,
             context=context,
             runtime=mock_runtime,
@@ -167,7 +167,7 @@ class TestFlowExecution:
         """Test that flow state is tracked correctly."""
         context = create_execution_context(initiator="user:test")
 
-        engine = FlowEngine(
+        engine = SimpleFlowEngine(
             flow=simple_flow_config,
             context=context,
             runtime=mock_runtime,

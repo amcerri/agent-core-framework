@@ -273,3 +273,41 @@ class Runtime:
         if self._last_lifecycle is None:
             return []
         return self._last_lifecycle.get_events()
+
+    def execute_action(
+        self, action: dict[str, Any], context: ExecutionContext
+    ) -> dict[str, Any]:
+        """Execute an action using the runtime's ActionExecutor.
+
+        This method ensures that actions executed through the runtime use
+        the runtime's observability sink and governance configuration,
+        maintaining consistency across direct execution and flow execution.
+
+        Args:
+            action: Action dictionary with type, resource identifier, and payload.
+            context: Execution context for the action execution.
+
+        Returns:
+            Dictionary containing execution result.
+
+        Raises:
+            ActionExecutionError: If action execution fails.
+        """
+        from agent_core.governance.budget import BudgetTracker
+
+        # Create budget tracker for this action execution
+        # (following the same pattern as execute_agent)
+        budget_tracker = BudgetTracker(context)
+
+        # Create action executor with runtime's observability sink
+        # This ensures flow execution uses the same observability as direct execution
+        action_executor = ActionExecutor(
+            context=context,
+            config=self.config,
+            tools=self.tools,
+            services=self.services,
+            sink=self.observability_sink,  # Use runtime's sink, not NoOp
+            budget_tracker=budget_tracker,
+        )
+
+        return action_executor.execute_action(action)

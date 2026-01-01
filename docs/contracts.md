@@ -97,9 +97,34 @@ class Service(Protocol):
         context: ExecutionContext
     ) -> bool:
         ...
+    
+    def execute(
+        self,
+        input_data: ServiceInput,
+        context: ExecutionContext
+    ) -> ServiceResult:
+        ...
 ```
 
 Contract: [agent_core/contracts/service.py](../agent_core/contracts/service.py)
+
+### ServiceInput
+
+```python
+class ServiceInput(BaseModel):
+    action: str
+    payload: dict[str, Any]
+```
+
+### ServiceResult
+
+```python
+class ServiceResult(BaseModel):
+    status: str
+    output: dict[str, Any]
+    errors: list[dict[str, Any]]
+    metrics: dict[str, Any]
+```
 
 ## Flow Contract
 

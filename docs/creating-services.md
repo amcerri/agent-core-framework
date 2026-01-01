@@ -20,6 +20,7 @@ The framework provides `BaseService` as a foundation for implementing services:
 ```python
 from agent_core.services.base import BaseService
 from agent_core.contracts.execution_context import ExecutionContext
+from agent_core.contracts.service import ServiceInput, ServiceResult
 
 class MyService(BaseService):
     @property
@@ -37,6 +38,13 @@ class MyService(BaseService):
     def check_permission(self, action: str, context: ExecutionContext) -> bool:
         # Check if action is permitted
         pass
+    
+    def execute(
+        self, input_data: ServiceInput, context: ExecutionContext
+    ) -> ServiceResult:
+        # Execute service action
+        # Return structured result
+        pass
 ```
 
 Base class: [agent_core/services/base.py](../agent_core/services/base.py)
@@ -46,6 +54,7 @@ Base class: [agent_core/services/base.py](../agent_core/services/base.py)
 ```python
 from agent_core.services.base import BaseService
 from agent_core.contracts.execution_context import ExecutionContext
+from agent_core.contracts.service import ServiceInput, ServiceResult
 
 class StorageService(BaseService):
     def __init__(self):
@@ -66,11 +75,65 @@ class StorageService(BaseService):
     def check_permission(self, action: str, context: ExecutionContext) -> bool:
         # Check permissions from context
         permissions = context.permissions
-        if action == "read":
-            return permissions.get("read", False)
-        elif action == "write":
-            return permissions.get("write", False)
+        if action in ["read", "get"]:
+            return permissions.get("read", False) or permissions.get("storage", False)
+        elif action in ["write", "set"]:
+            return permissions.get("write", False) or permissions.get("storage", False)
         return False
+    
+    def execute(
+        self, input_data: ServiceInput, context: ExecutionContext
+    ) -> ServiceResult:
+        """Execute a service action.
+        
+        Supported actions: "get", "set"
+        """
+        action = input_data.action
+        payload = input_data.payload
+        
+        # Check permission (runtime also checks, but service should verify)
+        if not self.check_permission(action, context):
+            return ServiceResult(
+                status="error",
+                output={},
+                errors=[{"error": "permission_denied"}],
+                metrics={},
+            )
+        
+        # Execute action
+        if action == "get":
+            key = payload.get("key")
+            value = self._storage.get(key) if key else None
+            return ServiceResult(
+                status="success",
+                output={"key": key, "value": value},
+                errors=[],
+                metrics={},
+            )
+        elif action == "set":
+            key = payload.get("key")
+            value = payload.get("value")
+            if key and value:
+                self._storage[key] = value
+                return ServiceResult(
+                    status="success",
+                    output={"key": key, "stored": True},
+                    errors=[],
+                    metrics={},
+                )
+            return ServiceResult(
+                status="error",
+                output={},
+                errors=[{"error": "missing_parameters"}],
+                metrics={},
+            )
+        else:
+            return ServiceResult(
+                status="error",
+                output={},
+                errors=[{"error": "unknown_action"}],
+                metrics={},
+            )
     
     def get(self, key: str) -> dict | None:
         """Service-specific method (not part of base contract)."""

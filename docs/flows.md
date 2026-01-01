@@ -84,13 +84,19 @@ Execute flows using a flow engine:
 
 ```python
 from agent_core.orchestration import SimpleFlowEngine
+from agent_core.runtime import Runtime
 from agent_core.runtime.execution_context import create_execution_context
+from agent_core.configuration.loader import load_config
 from agent_core.configuration.schemas import RuntimeConfig
+
+# Load configuration and create runtime
+config = load_config()
+runtime = Runtime(config=config)
 
 # Create execution context
 context = create_execution_context(
     initiator="user:test",
-    runtime_config=RuntimeConfig(runtime_id="test", concurrency=1)
+    runtime_config=config.runtime
 )
 
 # Create flow engine

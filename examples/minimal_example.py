@@ -17,13 +17,16 @@ from pathlib import Path
 # Add parent directory to path to import agent_core
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from typing import Any
+
 from agent_core.agents.base import BaseAgent
 from agent_core.configuration.loader import load_config
 from agent_core.contracts.agent import AgentInput, AgentResult
 from agent_core.contracts.execution_context import ExecutionContext
+from agent_core.contracts.observability import ComponentType, CorrelationFields
+from agent_core.contracts.service import ServiceInput, ServiceResult
 from agent_core.contracts.tool import ToolInput, ToolResult
 from agent_core.observability.logging import get_logger
-from agent_core.contracts.observability import ComponentType, CorrelationFields
 from agent_core.orchestration import SimpleFlowEngine, load_flow_from_yaml
 from agent_core.runtime.execution_context import create_execution_context
 from agent_core.runtime.runtime import Runtime
@@ -136,7 +139,7 @@ class StorageService(BaseService):
 
     def __init__(self):
         """Initialize storage service with empty storage."""
-        self._storage: dict[str, dict[str, any]] = {}
+        self._storage: dict[str, dict[str, Any]] = {}
 
     @property
     def service_id(self) -> str:
@@ -156,18 +159,122 @@ class StorageService(BaseService):
     def check_permission(self, action: str, context: ExecutionContext) -> bool:
         """Check if action is permitted."""
         permissions = context.permissions
-        if action == "read":
+        if action == "read" or action == "get":
             return permissions.get("read", False) or permissions.get("storage", False)
-        elif action == "write":
+        elif action == "write" or action == "set":
             return permissions.get("write", False) or permissions.get("storage", False)
         return False
 
-    def get(self, key: str) -> dict[str, any] | None:
-        """Get value from storage (service-specific method)."""
+    def execute(
+        self, input_data: ServiceInput, context: ExecutionContext
+    ) -> ServiceResult:
+        """Execute a service action.
+
+        Supported actions:
+        - "get": Retrieve a value by key (payload: {"key": str})
+        - "set": Store a value by key (payload: {"key": str, "value": dict})
+
+        Args:
+            input_data: Service input with action and payload.
+            context: Execution context.
+
+        Returns:
+            ServiceResult with execution status and output.
+        """
+        action = input_data.action
+        payload = input_data.payload
+
+        # Check permission (runtime also checks, but service should verify)
+        if not self.check_permission(action, context):
+            return ServiceResult(
+                status="error",
+                output={},
+                errors=[
+                    {
+                        "error": "permission_denied",
+                        "message": f"Permission denied for action '{action}'",
+                    }
+                ],
+                metrics={},
+            )
+
+        # Execute action
+        if action == "get":
+            key = payload.get("key")
+            if key is None:
+                return ServiceResult(
+                    status="error",
+                    output={},
+                    errors=[
+                        {
+                            "error": "missing_key",
+                            "message": "Payload must contain 'key' for 'get' action",
+                        }
+                    ],
+                    metrics={},
+                )
+            value = self._storage.get(key)
+            return ServiceResult(
+                status="success",
+                output={"key": key, "value": value},
+                errors=[],
+                metrics={"operation": "get"},
+            )
+
+        elif action == "set":
+            key = payload.get("key")
+            value = payload.get("value")
+            if key is None or value is None:
+                return ServiceResult(
+                    status="error",
+                    output={},
+                    errors=[
+                        {
+                            "error": "missing_parameters",
+                            "message": "Payload must contain 'key' and 'value' for 'set' action",
+                        }
+                    ],
+                    metrics={},
+                )
+            if not isinstance(value, dict):
+                return ServiceResult(
+                    status="error",
+                    output={},
+                    errors=[
+                        {
+                            "error": "invalid_value",
+                            "message": "Value must be a dictionary",
+                        }
+                    ],
+                    metrics={},
+                )
+            self._storage[key] = value
+            return ServiceResult(
+                status="success",
+                output={"key": key, "stored": True},
+                errors=[],
+                metrics={"operation": "set"},
+            )
+
+        else:
+            return ServiceResult(
+                status="error",
+                output={},
+                errors=[
+                    {
+                        "error": "unknown_action",
+                        "message": f"Unknown action '{action}'. Supported: 'get', 'set'",
+                    }
+                ],
+                metrics={},
+            )
+
+    def get(self, key: str) -> dict[str, Any] | None:
+        """Get value from storage (service-specific method for direct access)."""
         return self._storage.get(key)
 
-    def set(self, key: str, value: dict[str, any]) -> None:
-        """Set value in storage (service-specific method)."""
+    def set(self, key: str, value: dict[str, Any]) -> None:
+        """Set value in storage (service-specific method for direct access)."""
         self._storage[key] = value
 
 
@@ -281,29 +388,83 @@ def main():
         print("(Flow execution requires flow file - continuing without it)")
         print()
 
-    # Example 3: Service demonstration
+    # Example 3: Service execution via runtime
     print("-" * 60)
-    print("Example 3: Service Registration and Access")
+    print("Example 3: Service Execution via Runtime")
     print("-" * 60)
-    print("Demonstrating service registration and permission checking...")
+    print("Demonstrating service execution through runtime actions...")
     print(f"  - Service ID: {service.service_id}")
     print(f"  - Service capabilities: {service.capabilities}")
-    
-    # Demonstrate service permission checking
-    test_context = create_execution_context(
+    print()
+
+    # Create context with storage permissions
+    service_context = create_execution_context(
         initiator="user:example",
-        permissions={"storage": True, "write": True},
+        permissions={"storage": True, "write": True, "read": True},
+        budget={"time_limit": 60, "max_calls": 10},
     )
-    has_permission = service.check_permission("write", test_context)
-    print(f"  - Permission check for 'write' action: {has_permission}")
-    
-    # Show service can be accessed directly (for demonstration)
-    # In real usage, services are accessed via runtime action execution
-    service.set("demo_key", {"data": "demo_value"})
-    stored_value = service.get("demo_key")
-    print(f"  - Direct service access (demo): stored and retrieved {stored_value}")
+
+    # Create an agent that requests service actions
+    class ServiceAgent(BaseAgent):
+        """Agent that requests service actions."""
+
+        @property
+        def agent_id(self) -> str:
+            return "service_agent"
+
+        @property
+        def agent_version(self) -> str:
+            return "1.0.0"
+
+        @property
+        def capabilities(self) -> list[str]:
+            return ["service_access"]
+
+        def run(self, input_data: AgentInput, context: ExecutionContext) -> AgentResult:
+            """Request service actions."""
+            actions = [
+                {
+                    "type": "service",
+                    "service_id": "storage_service",
+                    "action": "set",
+                    "payload": {"key": "example_key", "value": {"data": "example_value"}},
+                },
+                {
+                    "type": "service",
+                    "service_id": "storage_service",
+                    "action": "get",
+                    "payload": {"key": "example_key"},
+                },
+            ]
+            return AgentResult(
+                status="success",
+                output={"requested_actions": len(actions)},
+                actions=actions,
+                errors=[],
+                metrics={},
+            )
+
+    service_agent = ServiceAgent()
+    runtime.register_agent(service_agent)
+
+    # Execute agent which will trigger service actions
+    print("Executing agent that requests service actions...")
+    service_result = runtime.execute_agent(
+        agent_id="service_agent",
+        input_data={},
+        context=service_context,
+    )
+    print(f"Agent execution result: status={service_result.status}")
+    print(f"  - Actions requested: {len(service_result.actions)}")
+    print(f"  - Errors: {len(service_result.errors)}")
+    print()
+
+    # Show that service storage was updated
+    print("Verifying service execution...")
+    stored_value = service.get("example_key")
     print(f"  - Service storage contains: {len(service._storage)} item(s)")
-    print("  Note: Service actions go through governance enforcement via runtime")
+    if stored_value:
+        print(f"  - Retrieved value: {stored_value}")
     print()
 
     # Example 4: Governance enforcement

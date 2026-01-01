@@ -7,6 +7,7 @@ contract. Services provide governed access to shared resources and state.
 from abc import ABC, abstractmethod
 
 from agent_core.contracts.execution_context import ExecutionContext
+from agent_core.contracts.service import ServiceInput, ServiceResult
 
 
 class BaseService(ABC):
@@ -79,5 +80,33 @@ class BaseService(ABC):
             - Services should check permissions before any state access.
             - Permission checks should be deterministic and observable.
             - Failed permission checks should be logged and audited.
+        """
+        ...
+
+    @abstractmethod
+    def execute(
+        self, input_data: ServiceInput, context: ExecutionContext
+    ) -> ServiceResult:
+        """Execute a service action with the given input and context.
+
+        Services must implement this method to handle action execution.
+        The method should:
+        - Validate the action and payload
+        - Check permissions (via check_permission)
+        - Execute the action
+        - Return structured results
+
+        Args:
+            input_data: Structured input data containing action and payload.
+            context: Execution context with permissions, budget, etc.
+
+        Returns:
+            ServiceResult containing status, output, errors, and metrics.
+
+        Notes:
+            - Services should validate input_data.action against supported actions.
+            - Services should check permissions before executing actions.
+            - Services should handle errors gracefully and return them in the result.
+            - Services should emit observability signals via the context.
         """
         ...

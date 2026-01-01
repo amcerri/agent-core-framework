@@ -32,6 +32,26 @@ class AuditEmitter:
     Creates and emits audit events via the observability sink for
     all governed decisions (permissions, policies, budgets).
     Audit emission is mandatory and failures may terminate execution.
+
+    Error handling:
+    - All audit emission methods raise AuditEmissionError if emission fails.
+    - Audit failures may terminate execution per audit rules (see `.docs/08-security-and-governance.md`).
+    - In ActionExecutor, audit failures are caught but not re-raised when
+      another error is already being raised, to prevent masking the original
+      governance violation.
+
+    Example:
+        ```python
+        emitter = AuditEmitter(context=execution_context, sink=observability_sink)
+
+        # Emit permission decision
+        emitter.emit_permission_decision(
+            action="tool.execute",
+            target_resource="tool:my_tool",
+            decision_outcome="allowed",
+            permission="read",
+        )
+        ```
     """
 
     def __init__(

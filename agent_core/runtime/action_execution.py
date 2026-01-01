@@ -37,6 +37,37 @@ class ActionExecutor:
     Handles tool and service execution with full governance enforcement.
     All actions must go through this executor; agents cannot call
     tools/services directly.
+
+    Governance enforcement includes:
+    - Permission evaluation (required permissions must be present)
+    - Policy evaluation (allow, deny, or require approval)
+    - Budget tracking (time, calls, cost limits)
+    - Audit event emission (all governance decisions are audited)
+
+    Error handling:
+    - Audit emission failures are caught but not re-raised when
+      another error is already being raised. This prevents audit
+      failures from masking the original governance violation.
+    - If audit emission fails in isolation, it raises AuditEmissionError
+      which may terminate execution per audit rules.
+
+    Example:
+        ```python
+        executor = ActionExecutor(
+            context=execution_context,
+            config=config,
+            tools={"my_tool": my_tool},
+            services={},
+            sink=observability_sink,
+            budget_tracker=budget_tracker,
+        )
+
+        result = executor.execute_action({
+            "type": "tool",
+            "tool_id": "my_tool",
+            "payload": {"input": "data"},
+        })
+        ```
     """
 
     def __init__(
@@ -153,7 +184,9 @@ class ActionExecutor:
                         consumed=e.consumed,
                     )
                 except Exception:
-                    # Audit failure may terminate execution, but we already have budget error
+                    # Audit failure caught but not re-raised to avoid masking BudgetExhaustedError.
+                    # If audit emission fails in isolation, it raises AuditEmissionError which
+                    # may terminate execution per audit rules.
                     pass
                 raise ActionExecutionError(f"Budget exhausted: {e}") from e
 
@@ -174,7 +207,9 @@ class ActionExecutor:
                     permission=",".join(tool.permissions_required),
                 )
             except Exception:
-                # Audit failure may terminate execution
+                # Audit failure caught but not re-raised to avoid masking PermissionError.
+                # If audit emission fails in isolation, it raises AuditEmissionError which
+                # may terminate execution per audit rules.
                 pass
             raise ActionExecutionError(f"Permission denied: {e}") from e
 
@@ -195,7 +230,9 @@ class ActionExecutor:
                     policy="tool.execute",
                 )
             except Exception:
-                # Audit failure may terminate execution
+                # Audit failure caught but not re-raised to avoid masking policy denial.
+                # If audit emission fails in isolation, it raises AuditEmissionError which
+                # may terminate execution per audit rules.
                 pass
             raise ActionExecutionError(f"Policy denied execution of tool '{tool_id}'")
 
@@ -209,7 +246,9 @@ class ActionExecutor:
                     policy="tool.execute",
                 )
             except Exception:
-                # Audit failure may terminate execution
+                # Audit failure caught but not re-raised to avoid masking approval requirement.
+                # If audit emission fails in isolation, it raises AuditEmissionError which
+                # may terminate execution per audit rules.
                 pass
             raise ActionExecutionError(f"Tool '{tool_id}' execution requires approval")
 
@@ -222,7 +261,9 @@ class ActionExecutor:
                 permission=",".join(tool.permissions_required),
             )
         except Exception:
-            # Audit failure may terminate execution
+            # Audit failure caught but not re-raised since tool execution already succeeded.
+            # If audit emission fails in isolation, it raises AuditEmissionError which
+            # may terminate execution per audit rules.
             pass
 
         # Record call in budget tracker
@@ -316,7 +357,9 @@ class ActionExecutor:
                         consumed=e.consumed,
                     )
                 except Exception:
-                    # Audit failure may terminate execution
+                    # Audit failure caught but not re-raised to avoid masking BudgetExhaustedError.
+                    # If audit emission fails in isolation, it raises AuditEmissionError which
+                    # may terminate execution per audit rules.
                     pass
                 raise ActionExecutionError(f"Budget exhausted: {e}") from e
 
@@ -333,7 +376,9 @@ class ActionExecutor:
                     permission=service_action,
                 )
             except Exception:
-                # Audit failure may terminate execution
+                # Audit failure caught but not re-raised to avoid masking permission denial.
+                # If audit emission fails in isolation, it raises AuditEmissionError which
+                # may terminate execution per audit rules.
                 pass
             raise ActionExecutionError(
                 f"Permission denied for service action '{service_action}' on '{service_id}'"
@@ -356,7 +401,9 @@ class ActionExecutor:
                     policy=f"service.{service_action}",
                 )
             except Exception:
-                # Audit failure may terminate execution
+                # Audit failure caught but not re-raised to avoid masking policy denial.
+                # If audit emission fails in isolation, it raises AuditEmissionError which
+                # may terminate execution per audit rules.
                 pass
             raise ActionExecutionError(
                 f"Policy denied service action '{service_action}' on '{service_id}'"
@@ -372,7 +419,9 @@ class ActionExecutor:
                     policy=f"service.{service_action}",
                 )
             except Exception:
-                # Audit failure may terminate execution
+                # Audit failure caught but not re-raised to avoid masking approval requirement.
+                # If audit emission fails in isolation, it raises AuditEmissionError which
+                # may terminate execution per audit rules.
                 pass
             raise ActionExecutionError(
                 f"Service action '{service_action}' on '{service_id}' requires approval"
@@ -387,7 +436,9 @@ class ActionExecutor:
                 permission=service_action,
             )
         except Exception:
-            # Audit failure may terminate execution
+            # Audit failure caught but not re-raised since service execution already succeeded.
+            # If audit emission fails in isolation, it raises AuditEmissionError which
+            # may terminate execution per audit rules.
             pass
 
         # Record call in budget tracker

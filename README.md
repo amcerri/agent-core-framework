@@ -208,20 +208,9 @@ Start here:
 
 - [`docs/README.md`](./docs/README.md)
 
-More guides, examples, and references will be added as the core APIs stabilize.
+For detailed guides and examples, see the [documentation index](./docs/README.md).
 
 ---
-
-## Contributing
-
-Contribution guidelines will be added once the core architecture stabilizes.
-
-Planned topics include:
-
-- Coding standards
-- Commit and branching strategy
-- Testing requirements
-- Review process
 
 ---
 
@@ -249,7 +238,7 @@ Planned:
 
 ## License
 
-This project is licensed under the MIT License. See the [`LICENSE`](./LICENSE) file for details.
+This project is currently private and not open for public use. License terms will be determined once the framework is fully validated and production-ready.
 
 ---
 
@@ -258,6 +247,3 @@ This project is licensed under the MIT License. See the [`LICENSE`](./LICENSE) f
 Maintainer: [Artur M.](https://github.com/amcerri)  
 Repository: [`https://github.com/amcerri/agent-core-framework`](https://github.com/amcerri/agent-core-framework)
 
----
-
-This README is expected to evolve alongside the project. All placeholders should be replaced as features are implemented.

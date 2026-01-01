@@ -96,6 +96,29 @@ For LangGraph support (optional):
 poetry install --extras langgraph
 ```
 
+### Docker Installation (Optional)
+
+For a reproducible development environment:
+
+```bash
+# Build image
+docker build -t agent-core-framework .
+
+# Run with mounted configuration
+docker run -v $(pwd)/config:/app/config:ro \
+  -v $(pwd)/examples:/app/examples:ro \
+  agent-core-framework \
+  python examples/minimal_example.py
+```
+
+Or use docker-compose:
+
+```bash
+docker-compose up
+```
+
+See [Docker Usage](./docs/docker.md) for detailed instructions.
+
 ---
 
 ## Usage

@@ -62,11 +62,33 @@ from agent_core.configuration.loader import load_config
 # Should not raise ImportError
 ```
 
+## Docker Installation (Optional)
+
+For a reproducible development environment using Docker:
+
+1. Build the Docker image:
+
+```bash
+docker build -t agent-core-framework .
+```
+
+2. Run with mounted configuration:
+
+```bash
+docker run -v $(pwd)/config:/app/config:ro \
+  -v $(pwd)/examples:/app/examples:ro \
+  agent-core-framework \
+  python examples/minimal_example.py
+```
+
+For more details, see [Docker Usage](./docker.md).
+
 ## Next Steps
 
 - Create a configuration file (see [Configuration](./configuration.md))
 - Review the [Overview](./overview.md) for architecture details
 - Check out [Creating Agents](./creating-agents.md) to get started
+- For Docker usage, see [Docker Usage](./docker.md)
 
 ---
 

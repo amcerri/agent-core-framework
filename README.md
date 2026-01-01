@@ -63,7 +63,9 @@ Key features:
 | Configuration system | ✅ Implemented |
 | Scheduling | ✅ Implemented |
 | Tests | ✅ In progress |
-| Examples | 🔄 Planned |
+| Examples | ✅ Implemented |
+| Docker | ✅ Implemented |
+| Developer Tooling | ✅ Implemented |
 
 ---
 
@@ -96,6 +98,22 @@ For LangGraph support (optional):
 poetry install --extras langgraph
 ```
 
+**Using Make (Recommended for Development):**
+
+```bash
+# Install dependencies
+make install
+
+# Install with LangGraph support
+make install-langgraph
+
+# Verify installation
+make verify
+
+# See all available commands
+make help
+```
+
 ### Docker Installation (Optional)
 
 For a reproducible development environment:
@@ -115,6 +133,19 @@ Or use docker-compose:
 
 ```bash
 docker-compose up
+```
+
+**Using Make:**
+
+```bash
+# Build Docker image
+make docker-build
+
+# Run example in Docker
+make docker-run
+
+# Start with docker-compose
+make docker-compose-up
 ```
 
 See [Docker Usage](./docs/docker.md) for detailed instructions.

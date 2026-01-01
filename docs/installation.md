@@ -62,6 +62,12 @@ from agent_core.configuration.loader import load_config
 # Should not raise ImportError
 ```
 
+Or using Make:
+
+```bash
+make verify
+```
+
 ## Docker Installation (Optional)
 
 For a reproducible development environment using Docker:
@@ -82,6 +88,30 @@ docker run -v $(pwd)/config:/app/config:ro \
 ```
 
 For more details, see [Docker Usage](./docker.md).
+
+## Using Make Commands
+
+The project includes a `Makefile` with convenient commands for common tasks:
+
+```bash
+# See all available commands
+make help
+
+# Install dependencies
+make install
+
+# Run tests
+make test
+
+# Format and lint code
+make format
+make lint
+
+# Run the example
+make run-example
+```
+
+See the [Makefile](../Makefile) for all available commands.
 
 ## Next Steps
 

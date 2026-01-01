@@ -11,7 +11,7 @@ from typing import Any
 from agent_core.configuration.schemas import AgentCoreConfig
 from agent_core.contracts.execution_context import ExecutionContext
 from agent_core.contracts.observability import ComponentType, CorrelationFields
-from agent_core.contracts.service import Service
+from agent_core.contracts.service import Service, ServiceInput, ServiceResult
 from agent_core.contracts.tool import Tool, ToolInput
 from agent_core.governance.audit import AuditEmitter
 from agent_core.governance.budget import BudgetEnforcer, BudgetExhaustedError, BudgetTracker
@@ -394,6 +394,14 @@ class ActionExecutor:
         if self.budget_tracker is not None:
             self.budget_tracker.record_call()
 
+        # Prepare service input
+        payload = action.get("payload", {})
+
+        service_input = ServiceInput(
+            action=service_action,
+            payload=payload,
+        )
+
         # Execute service action
         self.logger.info(
             "Executing service action",
@@ -404,26 +412,35 @@ class ActionExecutor:
             },
         )
 
-        # Note: Service interface only has check_permission, not a generic execute method
-        # For now, we'll return a placeholder result. In a full implementation,
-        # services would have action-specific methods or a generic execute method.
-        # This is a skeleton that enforces governance boundaries.
+        try:
+            service_result = service.execute(service_input, self.context)
+        except Exception as e:
+            self.logger.error(
+                "Service execution failed",
+                extra={"service_id": service_id, "action": service_action, "error": str(e)},
+            )
+            raise ActionExecutionError(f"Service execution failed: {e}") from e
+
+        # Record cost if available in metrics
+        if self.budget_tracker is not None and "cost" in service_result.metrics:
+            self.budget_tracker.record_cost(service_result.metrics["cost"])
 
         self.logger.info(
             "Service action execution completed",
             extra={
                 "service_id": service_id,
                 "action": service_action,
+                "status": service_result.status,
             },
         )
 
         # Return result as dictionary
-        # Note: Service execution result format is not fully defined in contracts
-        # This is a placeholder that can be extended
         return {
             "type": "service",
             "service_id": service_id,
             "action": service_action,
-            "status": "success",
-            "output": {},
+            "status": service_result.status,
+            "output": service_result.output,
+            "errors": service_result.errors,
+            "metrics": service_result.metrics,
         }

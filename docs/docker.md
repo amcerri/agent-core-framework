@@ -22,13 +22,13 @@ The framework works identically with or without Docker. No framework behavior de
 
 ### Using Dockerfile
 
-1. Build the image:
+Build the image:
 
 ```bash
 docker build -t agent-core-framework .
 ```
 
-2. Run with mounted configuration:
+Then run with mounted configuration:
 
 ```bash
 docker run -v $(pwd)/config:/app/config:ro \
@@ -39,7 +39,7 @@ docker run -v $(pwd)/config:/app/config:ro \
 
 ### Using docker-compose
 
-1. Ensure configuration exists:
+First, ensure configuration exists:
 
 ```bash
 # Create config directory if it doesn't exist
@@ -49,13 +49,13 @@ mkdir -p config
 cp examples/config/agent-core.yaml config/
 ```
 
-2. Start the container:
+Then start the container:
 
 ```bash
 docker-compose up
 ```
 
-3. Run commands interactively:
+To run commands interactively:
 
 ```bash
 docker-compose exec agent-core python examples/minimal_example.py
@@ -178,4 +178,3 @@ If imports fail:
 
 Back to [docs index](./README.md)  
 Back to [repository root](../README.md)
-

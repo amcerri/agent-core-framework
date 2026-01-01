@@ -353,21 +353,10 @@ class LangGraphFlowEngine(BaseFlowEngine):
             "payload": payload,
         }
 
-        from agent_core.governance.budget import BudgetTracker
-        from agent_core.observability.noop import NoOpObservabilitySink
-        from agent_core.runtime.action_execution import ActionExecutor
-
-        budget_tracker = BudgetTracker(self.context)
-        action_executor = ActionExecutor(
-            context=self.context,
-            config=self.runtime.config,
-            tools=self.runtime.tools,
-            services=self.runtime.services,
-            sink=NoOpObservabilitySink(),
-            budget_tracker=budget_tracker,
-        )
-
-        result = action_executor.execute_action(action)
+        # Execute tool via runtime's action executor
+        # This ensures flow execution uses the same observability sink and
+        # governance configuration as direct execution
+        result = self.runtime.execute_action(action, self.context)
 
         return {
             "type": "tool",

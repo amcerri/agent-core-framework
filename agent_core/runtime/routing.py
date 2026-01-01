@@ -4,8 +4,6 @@ Provides deterministic agent selection based on configuration and
 capabilities. No implicit LLM semantic routing is allowed.
 """
 
-from typing import Any
-
 from agent_core.contracts.agent import Agent
 from agent_core.contracts.execution_context import ExecutionContext
 

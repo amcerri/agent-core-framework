@@ -1,7 +1,7 @@
 """Test the contract test harness helpers."""
 
 import pytest
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from agent_core.contracts.execution_context import ExecutionContext
 from tests.contracts.helpers import (
@@ -57,6 +57,7 @@ class TestHarnessHelpers:
 
     def test_assert_schema_requires_fields(self):
         """Test that assert_schema_requires_fields works correctly."""
+
         class RequiredFieldsModel(BaseModel):
             required_field: str
             optional_field: str | None = None
@@ -98,6 +99,7 @@ class TestHarnessHelpers:
 
         # UUID v1 should fail (not v4)
         import uuid
+
         uuid_v1 = str(uuid.uuid1())
         with pytest.raises(AssertionError, match="must be a UUID v4"):
             assert_uuid_v4(uuid_v1, "field")
@@ -126,4 +128,3 @@ class TestHarnessFixtures:
         assert isinstance(sample_correlation_id, str)
         assert_uuid_v4(sample_run_id, "run_id")
         assert_uuid_v4(sample_correlation_id, "correlation_id")
-

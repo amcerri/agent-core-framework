@@ -8,9 +8,10 @@ import heapq
 import threading
 import time
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Callable
+from typing import Any
 
 from agent_core.configuration.schemas import AgentCoreConfig
 from agent_core.contracts.execution_context import ExecutionContext
@@ -161,7 +162,9 @@ class Scheduler:
                 task_id=task_id,
                 priority=priority,
                 decision="queued",
-                reason="concurrency_limit" if len(self._running_tasks) >= self.max_concurrency else "immediate",
+                reason="concurrency_limit"
+                if len(self._running_tasks) >= self.max_concurrency
+                else "immediate",
             )
 
             # Check if we can execute immediately
@@ -188,25 +191,28 @@ class Scheduler:
         Args:
             task: Scheduled task to execute.
         """
+
         def task_wrapper() -> None:
             """Wrapper function to execute task and handle completion."""
             try:
-                self.logger.info("Task started", extra={"task_id": task.task_id, "priority": task.priority})
-                
+                self.logger.info(
+                    "Task started", extra={"task_id": task.task_id, "priority": task.priority}
+                )
+
                 # Execute the task
                 result = task.execute_fn()
-                
+
                 # Store result
                 with self._lock:
                     self._task_results[task.task_id] = result
                     self._task_errors.pop(task.task_id, None)  # Clear any previous error
-                    
+
             except Exception as e:
                 # Store error
                 with self._lock:
                     self._task_errors[task.task_id] = e
                     self._task_results.pop(task.task_id, None)  # Clear any previous result
-                    
+
                 self.logger.error(
                     "Task execution failed",
                     extra={"task_id": task.task_id, "error": str(e)},
@@ -215,13 +221,13 @@ class Scheduler:
                 # Mark task as complete
                 with self._lock:
                     self._running_tasks.pop(task.task_id, None)
-                    
+
                     # Signal completion (but keep event for result retrieval)
                     completion_event = self._task_completion_events.get(task.task_id)
                     if completion_event:
                         completion_event.set()
                     # Don't remove completion event - keep it for result retrieval
-                    
+
                     # Emit observability signal
                     self._emit_scheduling_decision(
                         task_id=task.task_id,
@@ -229,19 +235,19 @@ class Scheduler:
                         decision="completed",
                         reason="task_finished",
                     )
-                    
+
                     # Try to start next queued task
                     self._try_start_next_task()
 
         # Create and start thread
         thread = threading.Thread(target=task_wrapper, name=f"scheduler-task-{task.task_id}")
         thread.daemon = True  # Allow main process to exit even if threads are running
-        
+
         with self._lock:
             self._running_tasks[task.task_id] = thread
-            
+
         thread.start()
-        
+
         self.logger.info(
             "Task execution started",
             extra={
@@ -256,16 +262,16 @@ class Scheduler:
         with self._lock:
             if len(self._running_tasks) >= self.max_concurrency:
                 return  # At capacity
-            
+
             if not self._pending_queue:
                 return  # No queued tasks
-            
+
             # Get highest priority task from queue
             next_task = heapq.heappop(self._pending_queue)
-            
+
             # Start execution
             self._start_task(next_task)
-            
+
             self.logger.info(
                 "Next queued task started",
                 extra={
@@ -295,19 +301,23 @@ class Scheduler:
         if completion_event is not None:
             if not completion_event.wait(timeout=timeout):
                 raise TimeoutError(f"Task '{task_id}' did not complete within timeout.")
-        
+
         # Check for errors
         with self._lock:
             if task_id in self._task_errors:
                 raise self._task_errors[task_id]
-            
+
             if task_id in self._task_results:
                 return self._task_results[task_id]
-            
+
             # Task not found or not completed
-            if task_id not in self._task_completion_events and task_id not in self._task_results and task_id not in self._task_errors:
+            if (
+                task_id not in self._task_completion_events
+                and task_id not in self._task_results
+                and task_id not in self._task_errors
+            ):
                 raise KeyError(f"Task '{task_id}' not found.")
-            
+
             raise KeyError(f"Task '{task_id}' result not found.")
 
     def wait_for_completion(self, task_id: str, timeout: float | None = None) -> bool:
@@ -327,7 +337,7 @@ class Scheduler:
                 if task_id in self._task_results or task_id in self._task_errors:
                     return True  # Already completed
             return False  # Task not found
-        
+
         return completion_event.wait(timeout=timeout)
 
     def get_status(self) -> dict[str, Any]:
@@ -361,7 +371,7 @@ class Scheduler:
         """
         if self.observability_sink is None:
             return
-        
+
         try:
             # Emit structured log
             self.logger.info(
@@ -373,7 +383,7 @@ class Scheduler:
                     "reason": reason,
                 },
             )
-            
+
             # Could also emit metrics or traces here if needed
             # For now, structured logging is sufficient for observability
         except Exception as e:
@@ -382,4 +392,3 @@ class Scheduler:
                 "Failed to emit scheduling observability signal",
                 extra={"error": str(e)},
             )
-

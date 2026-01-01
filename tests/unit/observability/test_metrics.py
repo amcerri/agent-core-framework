@@ -299,4 +299,3 @@ class TestMetricsHelper:
         )
 
         provider.force_flush()
-

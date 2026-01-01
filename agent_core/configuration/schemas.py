@@ -1,8 +1,7 @@
 """Configuration schemas.
 
-Defines Pydantic schemas for all configuration sections as specified
-in `.docs/06-configuration.md`. All configuration must conform to
-these schemas.
+Defines Pydantic schemas for all configuration sections. All configuration
+must conform to these schemas.
 """
 
 from typing import Any
@@ -274,4 +273,3 @@ class AgentCoreConfig(BaseModel):
         default=None,
         description="Environment configuration.",
     )
-

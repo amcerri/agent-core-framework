@@ -174,4 +174,3 @@ class TestNoOpObservabilitySink:
         sink.emit_trace(span)
         sink.emit_metric(metric)
         sink.emit_audit(audit_event)
-

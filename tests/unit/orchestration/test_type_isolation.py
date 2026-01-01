@@ -57,13 +57,12 @@ class TestLangGraphTypeIsolation:
     def test_no_langgraph_in_core_contracts(self):
         """Test that no LangGraph types appear in core contracts."""
         # Import core contracts
-        import agent_core.contracts
 
         # Check that no LangGraph types are referenced
-        contracts_module = sys.modules["agent_core.contracts"]
+        _ = sys.modules["agent_core.contracts"]  # Verify module exists
         source_code = importlib.util.find_spec("agent_core.contracts")
         if source_code and source_code.origin:
-            with open(source_code.origin, "r") as f:
+            with open(source_code.origin) as f:
                 content = f.read()
                 # Check for LangGraph imports
                 if "langgraph" in content.lower() or "from langgraph" in content:
@@ -71,12 +70,11 @@ class TestLangGraphTypeIsolation:
 
     def test_no_langgraph_in_runtime(self):
         """Test that no LangGraph types appear in runtime."""
-        import agent_core.runtime
 
         # Check runtime module doesn't import LangGraph
         runtime_module = sys.modules["agent_core.runtime"]
         if hasattr(runtime_module, "__file__") and runtime_module.__file__:
-            with open(runtime_module.__file__, "r") as f:
+            with open(runtime_module.__file__) as f:
                 content = f.read()
                 if "langgraph" in content.lower():
                     pytest.fail("LangGraph found in runtime module")

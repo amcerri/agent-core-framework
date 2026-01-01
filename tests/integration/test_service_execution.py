@@ -40,9 +40,7 @@ class MockStorageService(BaseService):
             return permissions.get("write", False) or permissions.get("storage", False)
         return False
 
-    def execute(
-        self, input_data: ServiceInput, context: ExecutionContext
-    ) -> ServiceResult:
+    def execute(self, input_data: ServiceInput, context: ExecutionContext) -> ServiceResult:
         """Execute a service action."""
         action = input_data.action
         payload = input_data.payload
@@ -259,4 +257,3 @@ def test_service_execution_direct():
     # Verify storage
     assert len(service._storage) == 1
     assert service._storage["direct_key"] == {"data": "direct_value"}
-

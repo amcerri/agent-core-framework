@@ -61,16 +61,14 @@ def load_config(config_path: str | None = None) -> AgentCoreConfig:
 
     # Load YAML
     try:
-        with open(config_path, "r", encoding="utf-8") as f:
+        with open(config_path, encoding="utf-8") as f:
             config_data = yaml.safe_load(f)
     except yaml.YAMLError as e:
         raise ConfigurationError(
             f"Failed to parse YAML configuration file {config_path}: {e}"
         ) from e
     except OSError as e:
-        raise ConfigurationError(
-            f"Failed to read configuration file {config_path}: {e}"
-        ) from e
+        raise ConfigurationError(f"Failed to read configuration file {config_path}: {e}") from e
 
     # Handle empty file (yaml.safe_load returns None for empty files)
     if config_data is None:
@@ -80,9 +78,7 @@ def load_config(config_path: str | None = None) -> AgentCoreConfig:
     try:
         return AgentCoreConfig(**config_data)
     except ValidationError as e:
-        raise ConfigurationError(
-            f"Configuration validation failed for {config_path}: {e}"
-        ) from e
+        raise ConfigurationError(f"Configuration validation failed for {config_path}: {e}") from e
 
 
 def load_config_from_dict(config_data: dict[str, Any]) -> AgentCoreConfig:
@@ -103,4 +99,3 @@ def load_config_from_dict(config_data: dict[str, Any]) -> AgentCoreConfig:
         return AgentCoreConfig(**config_data)
     except ValidationError as e:
         raise ConfigurationError(f"Configuration validation failed: {e}") from e
-

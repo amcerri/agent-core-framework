@@ -6,7 +6,8 @@ Retries are only performed for retryable errors and when budgets allow.
 
 import random
 import time
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from agent_core.contracts.errors import Error, ErrorCategory
 from agent_core.contracts.execution_context import ExecutionContext
@@ -159,7 +160,6 @@ class RetryPolicy:
         if error_classifier is None:
             error_classifier = ErrorClassifier.classify
 
-        last_error: Error | None = None
         last_exception: Exception | None = None
 
         for attempt in range(1, self.max_attempts + 1):
@@ -171,7 +171,6 @@ class RetryPolicy:
             except Exception as e:
                 # Classify error
                 error = error_classifier(e, source)
-                last_error = error
                 last_exception = e
 
                 # Check if we should retry
@@ -191,4 +190,3 @@ class RetryPolicy:
 
         # Should not reach here, but raise generic error if we do
         raise RuntimeError("Retry policy execution failed without exception")
-

@@ -4,7 +4,6 @@ import time
 
 import pytest
 
-from agent_core.contracts.execution_context import ExecutionContext
 from agent_core.governance.budget import BudgetEnforcer, BudgetExhaustedError, BudgetTracker
 from agent_core.runtime.execution_context import create_execution_context
 

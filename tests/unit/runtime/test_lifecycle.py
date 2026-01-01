@@ -2,7 +2,6 @@
 
 import pytest
 
-from agent_core.contracts.execution_context import ExecutionContext
 from agent_core.runtime.execution_context import create_execution_context
 from agent_core.runtime.lifecycle import LifecycleEvent, LifecycleManager, LifecycleState
 
@@ -121,7 +120,7 @@ class TestLifecycleManager:
 
         events = lifecycle.get_events()
         event_types = [event for event, _ in events]
-        
+
         assert LifecycleEvent.INITIALIZATION_COMPLETED in event_types
         assert LifecycleEvent.EXECUTION_STARTED in event_types
         assert LifecycleEvent.TERMINATION_STARTED in event_types
@@ -135,14 +134,13 @@ class TestLifecycleManager:
         lifecycle.transition_to(LifecycleState.READY)
         lifecycle.transition_to(LifecycleState.EXECUTING)
         lifecycle.transition_to(LifecycleState.COMPLETED)
-        
+
         # Verify lifecycle is terminal
         assert lifecycle.is_terminal()
-        
+
         # Events should still be accessible
         events = lifecycle.get_events()
         assert len(events) == 3
         assert events[0][0] == LifecycleEvent.INITIALIZATION_COMPLETED
         assert events[1][0] == LifecycleEvent.EXECUTION_STARTED
         assert events[2][0] == LifecycleEvent.EXECUTION_COMPLETED
-

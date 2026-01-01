@@ -30,9 +30,7 @@ class ErrorService(BaseService):
         """Check if action is permitted."""
         return context.permissions.get("test", False)
 
-    def execute(
-        self, input_data: ServiceInput, context: ExecutionContext
-    ) -> ServiceResult:
+    def execute(self, input_data: ServiceInput, context: ExecutionContext) -> ServiceResult:
         """Execute service action with error handling."""
         action = input_data.action
 
@@ -147,4 +145,3 @@ def test_service_execution_with_metrics():
     # Verify metrics are included
     assert "metrics" in result
     assert result["metrics"].get("attempts") == 1
-

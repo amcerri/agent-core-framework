@@ -3,7 +3,6 @@
 import pytest
 
 from agent_core.configuration.loader import ConfigurationError, load_config_from_dict
-from agent_core.configuration.schemas import AgentCoreConfig
 from agent_core.configuration.validation import (
     apply_environment_overrides,
     validate_and_apply_overrides,
@@ -397,4 +396,3 @@ class TestValidateAndApplyOverrides:
         result = validate_and_apply_overrides(config, emit_observability=True)
 
         assert result.runtime is not None
-

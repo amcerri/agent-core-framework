@@ -82,4 +82,3 @@ class ObservabilitySink(Protocol):
             - Failures to emit audit events may terminate execution.
         """
         ...
-

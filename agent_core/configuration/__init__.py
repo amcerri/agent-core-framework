@@ -2,7 +2,7 @@
 
 This package provides configuration schemas and YAML loading functionality
 for the framework. Configuration is validated at startup and must conform
-to the schemas defined in `.docs/06-configuration.md`.
+to the defined schemas.
 """
 
 from agent_core.configuration.loader import (
@@ -11,8 +11,8 @@ from agent_core.configuration.loader import (
     load_config_from_dict,
 )
 from agent_core.configuration.schemas import (
-    AgentCoreConfig,
     AgentConfig,
+    AgentCoreConfig,
     EnvironmentConfig,
     FlowConfig,
     GovernanceConfig,
@@ -46,4 +46,3 @@ __all__ = [
     "validate_and_apply_overrides",
     "validate_config",
 ]
-

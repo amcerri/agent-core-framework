@@ -1,7 +1,5 @@
 """Unit tests for error classification."""
 
-import pytest
-
 from agent_core.configuration.loader import ConfigurationError
 from agent_core.contracts.errors import ErrorCategory, ErrorSeverity
 from agent_core.governance.audit import AuditEmissionError
@@ -154,7 +152,7 @@ class TestErrorClassifier:
 
         for error in test_errors:
             classified = ErrorClassifier.classify(error, source="test:source")
-            
+
             # Verify all required fields are present
             assert classified.error_id is not None
             assert classified.error_type is not None
@@ -163,4 +161,3 @@ class TestErrorClassifier:
             assert isinstance(classified.retryable, bool)
             assert classified.source is not None
             assert isinstance(classified.metadata, dict)
-

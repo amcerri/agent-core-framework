@@ -214,4 +214,3 @@ class ErrorClassifier:
                 "exception_module": type(exception).__module__,
             },
         )
-

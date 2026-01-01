@@ -5,8 +5,6 @@ of cardinality rules. High-cardinality identifiers like run_id must
 not be used as metric labels.
 """
 
-from typing import Any
-
 from opentelemetry import metrics
 from opentelemetry.metrics import Meter
 
@@ -21,7 +19,7 @@ class MetricsHelper:
 
     This class provides a framework interface over OpenTelemetry metrics APIs,
     ensuring that all metrics include required correlation fields and enforce
-    cardinality rules as specified in `.docs/09-observability.md`.
+    cardinality rules (high-cardinality identifiers must not be used as labels).
 
     Cardinality rules:
     - run_id must never be used as a metric label
@@ -146,4 +144,3 @@ def get_metrics_helper(meter: Meter | None = None) -> MetricsHelper:
         MetricsHelper instance.
     """
     return MetricsHelper(meter=meter)
-

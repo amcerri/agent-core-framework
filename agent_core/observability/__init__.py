@@ -8,4 +8,3 @@ from agent_core.observability.interface import ObservabilitySink
 from agent_core.observability.noop import NoOpObservabilitySink
 
 __all__ = ["ObservabilitySink", "NoOpObservabilitySink"]
-

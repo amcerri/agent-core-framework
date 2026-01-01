@@ -7,8 +7,8 @@ import pytest
 
 from agent_core.configuration.schemas import AgentCoreConfig, RuntimeConfig
 from agent_core.contracts.execution_context import ExecutionContext
-from agent_core.orchestration.scheduler import Scheduler, ScheduledTask
 from agent_core.observability.noop import NoOpObservabilitySink
+from agent_core.orchestration.scheduler import Scheduler
 from agent_core.utils.ids import generate_correlation_id, generate_run_id
 
 
@@ -276,7 +276,7 @@ class TestScheduler:
             return "result"
 
         context = create_test_context()
-        completion_event = scheduler.schedule(
+        _ = scheduler.schedule(
             task_id="task-1",
             execute_fn=task_fn,
             context=context,
@@ -364,4 +364,3 @@ class TestScheduler:
 
         completion_event.wait(timeout=2.0)
         assert scheduler.get_result("task-1") == "result"
-

@@ -3,6 +3,7 @@
 import pytest
 
 from agent_core.contracts.execution_context import ExecutionContext
+from agent_core.contracts.service import ServiceInput, ServiceResult
 from agent_core.runtime.execution_context import create_execution_context
 from agent_core.services.base import BaseService
 
@@ -38,6 +39,24 @@ class ConcreteService(BaseService):
         if isinstance(permissions, dict):
             return permissions.get(action, False)
         return False
+
+    def execute(self, input_data: ServiceInput, context: ExecutionContext) -> ServiceResult:
+        """Execute service action."""
+        # Simple implementation for testing
+        if not self.check_permission(input_data.action, context):
+            return ServiceResult(
+                status="error",
+                output={},
+                errors=[{"error": "permission_denied"}],
+                metrics={},
+            )
+
+        return ServiceResult(
+            status="success",
+            output={"action": input_data.action, "payload": input_data.payload},
+            errors=[],
+            metrics={},
+        )
 
 
 class TestBaseService:

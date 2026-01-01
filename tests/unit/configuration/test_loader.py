@@ -1,8 +1,6 @@
 """Unit tests for configuration loader."""
 
 import os
-import tempfile
-from pathlib import Path
 
 import pytest
 import yaml
@@ -14,7 +12,6 @@ from agent_core.configuration.loader import (
 )
 from agent_core.configuration.schemas import (
     AgentCoreConfig,
-    RuntimeConfig,
 )
 
 
@@ -234,4 +231,3 @@ class TestLoadConfigFromDict:
 
         assert isinstance(config, AgentCoreConfig)
         assert config.runtime is None
-

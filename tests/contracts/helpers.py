@@ -24,7 +24,7 @@ def assert_schema_immutable(model_instance: BaseModel) -> None:
     # Try to mutate a field to verify immutability
     model_class = type(model_instance)
     first_field = list(model_class.model_fields.keys())[0]
-    original_value = getattr(model_instance, first_field)
+    _ = getattr(model_instance, first_field)  # Verify field exists
 
     try:
         setattr(model_instance, first_field, "test_mutation")
@@ -36,9 +36,7 @@ def assert_schema_immutable(model_instance: BaseModel) -> None:
         # Expected: frozen models raise ValidationError on mutation
         pass
     except Exception as e:
-        raise AssertionError(
-            f"Unexpected error when testing immutability: {e}"
-        ) from e
+        raise AssertionError(f"Unexpected error when testing immutability: {e}") from e
 
 
 def assert_schema_rejects_extra_fields(
@@ -75,9 +73,7 @@ def assert_schema_rejects_extra_fields(
                 f"Error: {error_str}"
             ) from e
     except Exception as e:
-        raise AssertionError(
-            f"Unexpected error when testing extra field rejection: {e}"
-        ) from e
+        raise AssertionError(f"Unexpected error when testing extra field rejection: {e}") from e
 
 
 def assert_schema_requires_fields(
@@ -153,8 +149,7 @@ def assert_uuid_format(value: str, field_name: str = "field") -> None:
         uuid.UUID(value)
     except ValueError as e:
         raise AssertionError(
-            f"Field '{field_name}' must be a valid UUID format. "
-            f"Got: {value}"
+            f"Field '{field_name}' must be a valid UUID format. Got: {value}"
         ) from e
 
 
@@ -172,12 +167,9 @@ def assert_uuid_v4(value: str, field_name: str = "field") -> None:
         uuid_obj = uuid.UUID(value)
         if uuid_obj.version != 4:
             raise AssertionError(
-                f"Field '{field_name}' must be a UUID v4. "
-                f"Got UUID version {uuid_obj.version}."
+                f"Field '{field_name}' must be a UUID v4. Got UUID version {uuid_obj.version}."
             )
     except ValueError as e:
         raise AssertionError(
-            f"Field '{field_name}' must be a valid UUID format. "
-            f"Got: {value}"
+            f"Field '{field_name}' must be a valid UUID format. Got: {value}"
         ) from e
-

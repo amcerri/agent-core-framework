@@ -22,8 +22,7 @@ class TracingHelper:
     """Helper class for creating and managing trace spans.
 
     This class provides a framework interface over OpenTelemetry APIs,
-    ensuring that all spans include required correlation fields and
-    attributes as specified in `.docs/09-observability.md`.
+    ensuring that all spans include required correlation fields and attributes.
     """
 
     def __init__(self, tracer: Tracer | None = None):
@@ -162,4 +161,3 @@ def get_tracing_helper(tracer: Tracer | None = None) -> TracingHelper:
         TracingHelper instance.
     """
     return TracingHelper(tracer=tracer)
-

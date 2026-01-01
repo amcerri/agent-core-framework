@@ -35,7 +35,7 @@ class AuditEmitter:
 
     Error handling:
     - All audit emission methods raise AuditEmissionError if emission fails.
-    - Audit failures may terminate execution per audit rules (see `.docs/08-security-and-governance.md`).
+    - Audit failures may terminate execution per audit rules.
     - In ActionExecutor, audit failures are caught but not re-raised when
       another error is already being raised, to prevent masking the original
       governance violation.

@@ -2,7 +2,6 @@
 
 import pytest
 
-from agent_core.contracts.execution_context import ExecutionContext
 from agent_core.contracts.observability import AuditEvent
 from agent_core.governance.audit import AuditEmissionError, AuditEmitter
 from agent_core.observability.noop import NoOpObservabilitySink

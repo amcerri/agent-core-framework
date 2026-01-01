@@ -65,4 +65,3 @@ def invalid_uuid_string() -> str:
 def valid_uuid_v4() -> str:
     """Return a valid UUID v4 string."""
     return str(uuid.uuid4())
-

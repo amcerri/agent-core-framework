@@ -27,9 +27,7 @@ class TestServiceProtocol:
             def check_permission(self, action: str, context: ExecutionContext) -> bool:
                 return action in context.permissions
 
-            def execute(
-                self, input_data: ServiceInput, context: ExecutionContext
-            ) -> ServiceResult:
+            def execute(self, input_data: ServiceInput, context: ExecutionContext) -> ServiceResult:
                 return ServiceResult(
                     status="success",
                     output={"action": input_data.action, "payload": input_data.payload},
@@ -78,14 +76,14 @@ class TestServiceProtocol:
         # Action is required
         try:
             ServiceInput(payload={"key": "value"})  # type: ignore
-            assert False, "Should raise validation error"
+            raise AssertionError("Should raise validation error")
         except Exception:
             pass
 
         # Payload is required
         try:
             ServiceInput(action="read")  # type: ignore
-            assert False, "Should raise validation error"
+            raise AssertionError("Should raise validation error")
         except Exception:
             pass
 
@@ -113,13 +111,13 @@ class TestServiceProtocol:
         # Status is required
         try:
             ServiceResult(output={})  # type: ignore
-            assert False, "Should raise validation error"
+            raise AssertionError("Should raise validation error")
         except Exception:
             pass
 
         # Output is required
         try:
             ServiceResult(status="success")  # type: ignore
-            assert False, "Should raise validation error"
+            raise AssertionError("Should raise validation error")
         except Exception:
             pass

@@ -86,7 +86,9 @@ def test_lifecycle_events_accessible_after_completion():
 
     # Events should be accessible after completion
     events = runtime.get_lifecycle_events()
-    assert len(events) >= 3  # At least INITIALIZATION_COMPLETED, EXECUTION_STARTED, EXECUTION_COMPLETED
+    assert (
+        len(events) >= 3
+    )  # At least INITIALIZATION_COMPLETED, EXECUTION_STARTED, EXECUTION_COMPLETED
 
     # Verify events are in correct order
     event_types = [event for event, _ in events]
@@ -116,7 +118,7 @@ def test_lifecycle_events_include_metadata():
     assert len(events) > 0
 
     # Verify all events have metadata (may be empty dict)
-    for event, metadata in events:
+    for _, metadata in events:
         assert isinstance(metadata, dict)
 
 
@@ -157,4 +159,3 @@ def test_lifecycle_events_empty_before_execution():
     # Before any execution, events should be empty
     events = runtime.get_lifecycle_events()
     assert events == []
-

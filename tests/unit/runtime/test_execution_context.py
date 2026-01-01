@@ -270,4 +270,3 @@ class TestExecutionContextPropagationInvariants:
 
         assert context1.run_id != context2.run_id
         assert context1.correlation_id != context2.correlation_id
-

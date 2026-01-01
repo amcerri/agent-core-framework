@@ -4,7 +4,7 @@ from agent_core.configuration.schemas import AgentCoreConfig, RuntimeConfig
 from agent_core.contracts.agent import AgentInput, AgentResult
 from agent_core.contracts.execution_context import ExecutionContext
 from agent_core.runtime.execution_context import create_execution_context
-from agent_core.runtime.lifecycle import LifecycleEvent, LifecycleState
+from agent_core.runtime.lifecycle import LifecycleEvent
 from agent_core.runtime.runtime import Runtime
 
 
@@ -48,7 +48,7 @@ def test_lifecycle_events_on_failed_execution():
     # Execute agent - should raise error
     try:
         runtime.execute_agent(agent_id="failing_agent", context=context)
-        assert False, "Should have raised RuntimeError"
+        raise AssertionError("Should have raised RuntimeError")
     except RuntimeError:
         pass
 
@@ -58,7 +58,10 @@ def test_lifecycle_events_on_failed_execution():
 
     # Verify FAILED event is present
     event_types = [event for event, _ in events]
-    assert LifecycleEvent.EXECUTION_FAILED in event_types or LifecycleEvent.TERMINATION_STARTED in event_types
+    assert (
+        LifecycleEvent.EXECUTION_FAILED in event_types
+        or LifecycleEvent.TERMINATION_STARTED in event_types
+    )
 
 
 def test_lifecycle_events_multiple_runtime_instances():
@@ -117,13 +120,12 @@ def test_lifecycle_events_after_routing_error():
 
     try:
         runtime.execute_agent(agent_id="nonexistent", context=context)
-        assert False, "Should have raised RoutingError"
+        raise AssertionError("Should have raised RoutingError")
     except RoutingError:
         pass
 
     # Get lifecycle events - should still have events (TERMINATED)
-    events = runtime.get_lifecycle_events()
     # Routing errors transition to TERMINATED, so we should have at least TERMINATION_STARTED
     # or the events list might be empty if routing error happens before lifecycle manager is created
     # This is acceptable behavior - routing errors happen before execution starts
-
+    _ = runtime.get_lifecycle_events()  # Verify method works (may return empty list)

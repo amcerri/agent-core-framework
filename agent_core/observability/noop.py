@@ -12,7 +12,6 @@ from agent_core.contracts.observability import (
     MetricValue,
     TraceSpan,
 )
-from agent_core.observability.interface import ObservabilitySink
 
 
 class NoOpObservabilitySink:
@@ -62,4 +61,3 @@ class NoOpObservabilitySink:
             This implementation is for testing only.
         """
         pass
-

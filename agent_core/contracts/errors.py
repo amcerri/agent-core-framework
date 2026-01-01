@@ -64,8 +64,7 @@ class Error(BaseModel):
     source: str = Field(
         ...,
         description=(
-            "Source component that generated the error "
-            "(e.g., 'agent:my_agent', 'tool:my_tool')."
+            "Source component that generated the error (e.g., 'agent:my_agent', 'tool:my_tool')."
         ),
     )
     metadata: dict[str, Any] = Field(

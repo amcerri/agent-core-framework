@@ -4,12 +4,9 @@ import json
 import logging
 from io import StringIO
 
-import pytest
-
 from agent_core.contracts.observability import (
     ComponentType,
     CorrelationFields,
-    LogLevel,
 )
 from agent_core.observability.logging import (
     CorrelationJSONFormatter,
@@ -155,6 +152,7 @@ class TestCorrelationJSONFormatter:
 
     def test_formatter_applies_redaction_hook(self):
         """Test that formatter applies redaction hook to metadata."""
+
         def redact_sensitive(metadata: dict) -> dict:
             """Redact sensitive fields."""
             redacted = metadata.copy()
@@ -321,6 +319,7 @@ class TestGetLogger:
 
     def test_get_logger_applies_redaction_hook(self):
         """Test that get_logger applies redaction hook."""
+
         def redact(metadata: dict) -> dict:
             """Redact sensitive data."""
             return {k: "[REDACTED]" if "secret" in k.lower() else v for k, v in metadata.items()}
@@ -346,11 +345,12 @@ class TestGetLogger:
         handler.setFormatter(formatter)
         logger.logger.addHandler(handler)
 
-        logger.info("Test message", extra={"secret_key": "value123", "public_field": "public_value"})
+        logger.info(
+            "Test message", extra={"secret_key": "value123", "public_field": "public_value"}
+        )
 
         output = stream.getvalue()
         data = json.loads(output)
 
         assert data["metadata"]["secret_key"] == "[REDACTED]"
         assert data["metadata"]["public_field"] == "public_value"
-

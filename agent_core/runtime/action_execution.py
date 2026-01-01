@@ -11,7 +11,7 @@ from typing import Any
 from agent_core.configuration.schemas import AgentCoreConfig
 from agent_core.contracts.execution_context import ExecutionContext
 from agent_core.contracts.observability import ComponentType, CorrelationFields
-from agent_core.contracts.service import Service, ServiceInput, ServiceResult
+from agent_core.contracts.service import Service, ServiceInput
 from agent_core.contracts.tool import Tool, ToolInput
 from agent_core.governance.audit import AuditEmitter
 from agent_core.governance.budget import BudgetEnforcer, BudgetExhaustedError, BudgetTracker

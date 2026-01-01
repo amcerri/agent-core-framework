@@ -274,9 +274,7 @@ class Runtime:
             return []
         return self._last_lifecycle.get_events()
 
-    def execute_action(
-        self, action: dict[str, Any], context: ExecutionContext
-    ) -> dict[str, Any]:
+    def execute_action(self, action: dict[str, Any], context: ExecutionContext) -> dict[str, Any]:
         """Execute an action using the runtime's ActionExecutor.
 
         This method ensures that actions executed through the runtime use

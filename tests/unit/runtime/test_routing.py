@@ -2,9 +2,8 @@
 
 import pytest
 
-from agent_core.contracts.agent import Agent, AgentInput, AgentResult
+from agent_core.contracts.agent import AgentInput, AgentResult
 from agent_core.contracts.execution_context import ExecutionContext
-from agent_core.runtime.execution_context import create_execution_context
 from agent_core.runtime.routing import Router, RoutingError
 
 
@@ -127,4 +126,3 @@ class TestRouter:
         # Should not match agent2 which only has cap1
         with pytest.raises(RoutingError):
             router.select_agent(required_capabilities=["cap1", "cap2", "cap3"])
-

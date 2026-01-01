@@ -3,7 +3,7 @@
 import pytest
 
 from agent_core.configuration.schemas import AgentCoreConfig, RuntimeConfig
-from agent_core.contracts.agent import Agent, AgentInput, AgentResult
+from agent_core.contracts.agent import AgentInput, AgentResult
 from agent_core.contracts.execution_context import ExecutionContext
 from agent_core.runtime.execution_context import create_execution_context
 from agent_core.runtime.lifecycle import LifecycleEvent
@@ -233,7 +233,7 @@ class TestRuntime:
         assert len(events) > 0
 
         # Check that events have metadata (may be empty dict)
-        for event, metadata in events:
+        for _, metadata in events:
             assert isinstance(metadata, dict)
 
     def test_get_lifecycle_events_accessible_after_completion(self):
@@ -252,7 +252,9 @@ class TestRuntime:
 
         # Events should be accessible after completion
         events = runtime.get_lifecycle_events()
-        assert len(events) >= 3  # At least INITIALIZATION_COMPLETED, EXECUTION_STARTED, EXECUTION_COMPLETED
+        assert (
+            len(events) >= 3
+        )  # At least INITIALIZATION_COMPLETED, EXECUTION_STARTED, EXECUTION_COMPLETED
 
     def test_get_lifecycle_events_tracks_multiple_executions(self):
         """Test that lifecycle events are tracked per execution."""
@@ -275,4 +277,3 @@ class TestRuntime:
         assert len(events2) > 0
         # Events should be from the most recent execution
         assert events2 != events1 or len(events2) == len(events1)
-

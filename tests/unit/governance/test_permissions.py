@@ -2,7 +2,6 @@
 
 import pytest
 
-from agent_core.contracts.execution_context import ExecutionContext
 from agent_core.governance.permissions import PermissionError, PermissionEvaluator
 from agent_core.runtime.execution_context import create_execution_context
 

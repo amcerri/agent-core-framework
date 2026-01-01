@@ -149,7 +149,7 @@ class TestTracingHelper:
         )
 
         with pytest.raises(ValueError):
-            with helper.span("run", correlation) as span:
+            with helper.span("run", correlation):
                 raise ValueError("Test error")
 
         spans = exporter.get_finished_spans()
@@ -174,9 +174,9 @@ class TestTracingHelper:
             timestamp="2024-01-01T00:00:00Z",
         )
 
-        span = helper.create_span("flow.execution", correlation)
-        trace_span = helper.to_trace_span(span, correlation, "flow.execution")
-        span.end()
+        opentelemetry_span = helper.create_span("flow.execution", correlation)
+        trace_span = helper.to_trace_span(opentelemetry_span, correlation, "flow.execution")
+        opentelemetry_span.end()
 
         assert trace_span.correlation.run_id == run_id
         assert trace_span.correlation.correlation_id == correlation_id
@@ -227,4 +227,3 @@ class TestTracingHelper:
         for i, (component_type, span_name) in enumerate(component_types):
             assert spans[i].name == span_name
             assert spans[i].attributes["component_type"] == component_type.value
-

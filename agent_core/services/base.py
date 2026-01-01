@@ -84,9 +84,7 @@ class BaseService(ABC):
         ...
 
     @abstractmethod
-    def execute(
-        self, input_data: ServiceInput, context: ExecutionContext
-    ) -> ServiceResult:
+    def execute(self, input_data: ServiceInput, context: ExecutionContext) -> ServiceResult:
         """Execute a service action with the given input and context.
 
         Services must implement this method to handle action execution.

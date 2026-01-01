@@ -100,8 +100,8 @@ class TestLangGraphEngineReplaceability:
         # If LangGraph is available, test LangGraphFlowEngine
         try:
             from agent_core.orchestration.langgraph_engine import (
-                LangGraphFlowEngine,
                 LANGGRAPH_AVAILABLE,
+                LangGraphFlowEngine,
             )
 
             if LANGGRAPH_AVAILABLE:

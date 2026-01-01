@@ -71,11 +71,7 @@ class QueryAgent(BaseAgent):
         # Decide actions based on input
         actions = []
         if query:
-            actions.append({
-                "type": "tool",
-                "tool_id": "search_tool",
-                "payload": {"query": query}
-            })
+            actions.append({"type": "tool", "tool_id": "search_tool", "payload": {"query": query}})
 
         return AgentResult(
             status="success",
@@ -165,9 +161,7 @@ class StorageService(BaseService):
             return permissions.get("write", False) or permissions.get("storage", False)
         return False
 
-    def execute(
-        self, input_data: ServiceInput, context: ExecutionContext
-    ) -> ServiceResult:
+    def execute(self, input_data: ServiceInput, context: ExecutionContext) -> ServiceResult:
         """Execute a service action.
 
         Supported actions:
@@ -294,6 +288,7 @@ def main():
         print(f"Error loading config: {e}")
         print("Using minimal default configuration...")
         from agent_core.configuration.schemas import AgentCoreConfig, RuntimeConfig
+
         config = AgentCoreConfig(runtime=RuntimeConfig(runtime_id="example_runtime"))
 
     print("Configuration loaded successfully")
@@ -378,7 +373,7 @@ def main():
 
         # Show flow state
         state = engine.get_state()
-        print(f"Flow state:")
+        print("Flow state:")
         print(f"  - Current node: {state.current_node}")
         print(f"  - History entries: {len(state.history)}")
         print()
@@ -486,7 +481,7 @@ def main():
     if restricted_result.errors:
         print(f"  - Errors (expected): {len(restricted_result.errors)}")
         for error in restricted_result.errors[:1]:  # Show first error
-            error_msg = error.get('error') or error.get('message', 'Unknown error')
+            error_msg = error.get("error") or error.get("message", "Unknown error")
             print(f"    - {error_msg}")
     print()
 
@@ -497,4 +492,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

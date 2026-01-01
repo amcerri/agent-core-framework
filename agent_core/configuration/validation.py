@@ -1,7 +1,6 @@
 """Configuration validation and environment override logic.
 
-Provides startup validation and deterministic environment override merging
-as specified in `.docs/06-configuration.md`.
+Provides startup validation and deterministic environment override merging.
 """
 
 from datetime import datetime, timezone
@@ -78,8 +77,7 @@ def validate_config(config: AgentCoreConfig) -> None:
             )
         if flow_config.entrypoint not in flow_config.nodes:
             errors.append(
-                f"Flow '{flow_id}' entrypoint '{flow_config.entrypoint}' "
-                "does not exist in nodes."
+                f"Flow '{flow_id}' entrypoint '{flow_config.entrypoint}' does not exist in nodes."
             )
 
     if errors:
@@ -272,4 +270,3 @@ def validate_and_apply_overrides(
         logger.info("Configuration validation and override application completed")
 
     return merged_config
-

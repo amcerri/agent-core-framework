@@ -91,9 +91,7 @@ class Service(Protocol):
         """
         ...
 
-    def execute(
-        self, input_data: ServiceInput, context: ExecutionContext
-    ) -> ServiceResult:
+    def execute(self, input_data: ServiceInput, context: ExecutionContext) -> ServiceResult:
         """Execute a service action with the given input and context.
 
         Args:

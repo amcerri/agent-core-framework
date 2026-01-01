@@ -7,8 +7,9 @@ redaction hooks for sensitive data.
 
 import json
 import logging
+from collections.abc import Callable
 from datetime import datetime, timezone
-from typing import Any, Callable
+from typing import Any
 
 from agent_core.contracts.observability import (
     ComponentType,
@@ -23,7 +24,7 @@ class CorrelationJSONFormatter(logging.Formatter):
 
     This formatter ensures that every log record includes the required
     correlation fields (run_id, correlation_id, component_type, component_id,
-    component_version, timestamp) as specified in `.docs/09-observability.md`.
+    component_version, timestamp).
 
     Attributes:
         redaction_hook: Optional callable that redacts sensitive data from
@@ -59,9 +60,7 @@ class CorrelationJSONFormatter(logging.Formatter):
             component_type=getattr(record, "component_type", ComponentType.RUNTIME),
             component_id=getattr(record, "component_id", "unknown"),
             component_version=getattr(record, "component_version", "unknown"),
-            timestamp=getattr(
-                record, "timestamp", datetime.now(timezone.utc).isoformat()
-            ),
+            timestamp=getattr(record, "timestamp", datetime.now(timezone.utc).isoformat()),
         )
 
         # Build metadata from record attributes (excluding standard fields)
@@ -218,4 +217,3 @@ def get_logger(
     )
 
     return adapter
-

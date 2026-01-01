@@ -1,12 +1,10 @@
 """Unit tests for retry policy."""
 
-import time
-
 import pytest
 
 from agent_core.contracts.errors import Error, ErrorCategory, ErrorSeverity
 from agent_core.contracts.execution_context import ExecutionContext
-from agent_core.governance.budget import BudgetEnforcer, BudgetExhaustedError, BudgetTracker
+from agent_core.governance.budget import BudgetEnforcer, BudgetTracker
 from agent_core.runtime.retry_policy import RetryPolicy
 from agent_core.utils.ids import generate_correlation_id, generate_run_id
 
@@ -269,4 +267,3 @@ class TestRetryPolicy:
         result2 = policy.should_retry(error, attempt=1, is_idempotent=True)
 
         assert result1 == result2
-

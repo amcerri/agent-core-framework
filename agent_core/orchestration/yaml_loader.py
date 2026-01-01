@@ -40,7 +40,7 @@ def load_flow_from_yaml(yaml_path: str | Path) -> FlowConfig:
         raise FlowLoadError(f"Flow path is not a file: {yaml_path}")
 
     try:
-        with open(yaml_path, "r", encoding="utf-8") as f:
+        with open(yaml_path, encoding="utf-8") as f:
             flow_data = yaml.safe_load(f)
     except yaml.YAMLError as e:
         raise FlowLoadError(f"Failed to parse YAML file {yaml_path}: {e}") from e

@@ -6,6 +6,7 @@ executing declarative orchestration graphs.
 
 from agent_core.orchestration.base import BaseFlowEngine
 from agent_core.orchestration.flow_engine import FlowExecutionError, SimpleFlowEngine
+from agent_core.orchestration.scheduler import Scheduler, ScheduledTask
 from agent_core.orchestration.state import FlowStateManager
 from agent_core.orchestration.yaml_loader import (
     FlowLoadError,
@@ -23,6 +24,8 @@ try:
         "FlowStateManager",
         "FlowLoadError",
         "LangGraphFlowEngine",
+        "Scheduler",
+        "ScheduledTask",
         "SimpleFlowEngine",
         "load_flow_from_dict",
         "load_flow_from_yaml",
@@ -34,6 +37,8 @@ except ImportError:
         "FlowExecutionError",
         "FlowStateManager",
         "FlowLoadError",
+        "Scheduler",
+        "ScheduledTask",
         "SimpleFlowEngine",
         "load_flow_from_dict",
         "load_flow_from_yaml",

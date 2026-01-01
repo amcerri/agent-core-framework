@@ -1,0 +1,28 @@
+# docker-compose.yml for Agent Core Framework
+# Optional development setup for reproducible local runs.
+# This is for development/demo use only - not for production deployment.
+
+services:
+  agent-core:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agent-core-framework
+    volumes:
+      # Mount configuration directory (must exist on host)
+      - ./config:/app/config:ro
+      # Mount examples for running examples
+      - ./examples:/app/examples:ro
+      # Mount source code for development (optional)
+      - ./agent_core:/app/agent_core:ro
+    environment:
+      # Override config location if needed
+      - AGENT_CORE_CONFIG=${AGENT_CORE_CONFIG:-/app/config/agent-core.yaml}
+    working_dir: /app
+    # Override command to run examples or custom scripts
+    # Example: command: ["python", "examples/minimal_example.py"]
+    command: ["python", "-c", "from agent_core.runtime import Runtime; print('Agent Core Framework runtime ready')"]
+    # Keep container running for interactive use
+    stdin_open: true
+    tty: true
+

@@ -1,0 +1,54 @@
+# Agent Core Framework Configuration
+# Minimal configuration for examples
+
+runtime:
+  runtime_id: "example_runtime"
+  mode: "development"
+  concurrency: 1
+  timeouts:
+    default: 60
+  default_locale: "en-US"
+  fail_fast: false
+
+agents:
+  query_agent:
+    agent_id: "query_agent"
+    version: "1.0.0"
+    enabled: true
+    capabilities:
+      - "query"
+      - "search"
+
+tools:
+  search_tool:
+    tool_id: "search_tool"
+    version: "1.0.0"
+    enabled: true
+    permissions_required:
+      - "search"
+    timeouts:
+      execution: 30
+
+governance:
+  permissions:
+    default: []
+  budgets:
+    time_limit: 300
+    max_calls: 100
+    cost_limit: 10.0
+  policies: {}
+  approvals:
+    required_for: []
+
+observability:
+  enabled: true
+  sampling:
+    rate: 1.0
+  exporters:
+    logging:
+      level: "INFO"
+  redaction:
+    patterns: []
+  audit:
+    enabled: true
+

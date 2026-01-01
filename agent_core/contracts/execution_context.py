@@ -5,6 +5,7 @@ concerns required to execute agents, tools, and flows in a controlled
 and observable manner.
 """
 
+import uuid
 from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
@@ -59,8 +60,6 @@ class ExecutionContext(BaseModel):
     @classmethod
     def validate_uuid_format(cls, v: str) -> str:
         """Validate that run_id and correlation_id are valid UUIDs."""
-        import uuid
-
         try:
             uuid.UUID(v)
         except ValueError as e:

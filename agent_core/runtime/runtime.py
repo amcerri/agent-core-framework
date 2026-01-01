@@ -56,6 +56,7 @@ class Runtime:
         self.services: dict[str, Service] = services or {}
         self.observability_sink = observability_sink or NoOpObservabilitySink()
         self.router = Router(self.agents)
+        self._last_lifecycle: LifecycleManager | None = None
 
         # Validate runtime config is present
         if config.runtime is None:
@@ -127,6 +128,8 @@ class Runtime:
 
         # Create lifecycle manager
         lifecycle = LifecycleManager(context)
+        # Store lifecycle manager for event retrieval
+        self._last_lifecycle = lifecycle
 
         # Create correlation for observability
         correlation = CorrelationFields(
@@ -265,7 +268,8 @@ class Runtime:
 
         Returns:
             List of (event, metadata) tuples from the last execution.
+            Returns empty list if no execution has occurred yet.
         """
-        # Note: This is a simplified version. In a full implementation,
-        # lifecycle events would be tracked per execution.
-        return []
+        if self._last_lifecycle is None:
+            return []
+        return self._last_lifecycle.get_events()

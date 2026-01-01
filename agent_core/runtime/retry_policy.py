@@ -4,6 +4,7 @@ Implements retry logic that respects idempotency and budget constraints.
 Retries are only performed for retryable errors and when budgets allow.
 """
 
+import random
 import time
 from typing import Any, Callable
 
@@ -120,8 +121,6 @@ class RetryPolicy:
         delay = min(delay, self.max_delay)
 
         # Add small jitter to prevent thundering herd
-        import random
-
         jitter = random.uniform(0.0, delay * 0.1)  # 10% jitter
         delay = delay + jitter
 

@@ -8,6 +8,7 @@ This is the default implementation. Alternative implementations (e.g.,
 LangGraph-backed) can be used by implementing the BaseFlowEngine interface.
 """
 
+import re
 from datetime import datetime, timezone
 from typing import Any
 
@@ -96,6 +97,127 @@ class SimpleFlowEngine(BaseFlowEngine):
             timestamp=datetime.now(timezone.utc).isoformat(),
         )
         self.logger = get_logger("agent_core.orchestration.flow_engine", correlation)
+
+    def _resolve_template(self, template: str, state_data: dict[str, Any]) -> Any:
+        """Resolve template variables in a string.
+
+        Supports:
+        - {{input.key}} - resolves to input_data[key]
+        - {{node_nodeid_result.key}} - resolves to node result data
+        - {{node_nodeid_result.output.key}} - resolves to nested node output
+
+        Args:
+            template: Template string with {{variable}} placeholders.
+            state_data: Current state data containing input and node results.
+
+        Returns:
+            Resolved value (string or original type if no templates found).
+        """
+        if not isinstance(template, str):
+            return template
+
+        # Pattern to match {{variable}} or {{variable.path}}
+        pattern = r"\{\{([^}]+)\}\}"
+
+        def replace_match(match: re.Match[str]) -> str:
+            var_path = match.group(1).strip()
+            parts = var_path.split(".")
+
+            # Handle input.*
+            if parts[0] == "input":
+                if len(parts) == 1:
+                    return str(state_data.get("input", {}))
+                value = state_data.get("input", {})
+                for part in parts[1:]:
+                    if isinstance(value, dict):
+                        value = value.get(part)
+                    else:
+                        return match.group(0)  # Return original if path invalid
+                return str(value) if value is not None else ""
+
+            # Handle node_*_result.*
+            if parts[0].startswith("node_") and parts[0].endswith("_result"):
+                node_id = parts[0][5:-7]  # Remove "node_" prefix and "_result" suffix
+                result_key = f"node_{node_id}_result"
+                value = state_data.get(result_key, {})
+                if len(parts) == 1:
+                    return str(value)
+                # Navigate through result structure
+                for part in parts[1:]:
+                    if isinstance(value, dict):
+                        value = value.get(part)
+                    else:
+                        return match.group(0)  # Return original if path invalid
+                return str(value) if value is not None else ""
+
+            # Unknown variable - return original
+            return match.group(0)
+
+        # Check if template contains any variables
+        if not re.search(pattern, template):
+            return template
+
+        # Replace all matches
+        resolved = re.sub(pattern, replace_match, template)
+
+        # If entire template was a single variable, try to return original type
+        single_match = re.match(r"^\{\{([^}]+)\}\}$", template)
+        if single_match:
+            var_path = single_match.group(1).strip()
+            parts = var_path.split(".")
+            if parts[0] == "input":
+                value = state_data.get("input", {})
+                for part in parts[1:]:
+                    if isinstance(value, dict):
+                        value = value.get(part)
+                    else:
+                        break
+                if value is not None:
+                    return value
+            elif parts[0].startswith("node_") and parts[0].endswith("_result"):
+                node_id = parts[0][5:-7]
+                result_key = f"node_{node_id}_result"
+                value = state_data.get(result_key, {})
+                for part in parts[1:]:
+                    if isinstance(value, dict):
+                        value = value.get(part)
+                    else:
+                        break
+                if value is not None:
+                    return value
+
+        return resolved
+
+    def _resolve_templates_in_dict(
+        self, data: dict[str, Any], state_data: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Recursively resolve template variables in a dictionary.
+
+        Args:
+            data: Dictionary that may contain template strings.
+            state_data: Current state data for template resolution.
+
+        Returns:
+            Dictionary with all template variables resolved.
+        """
+        resolved = {}
+        for key, value in data.items():
+            if isinstance(value, dict):
+                resolved[key] = self._resolve_templates_in_dict(value, state_data)
+            elif isinstance(value, list):
+                resolved[key] = [
+                    self._resolve_templates_in_dict(item, state_data)
+                    if isinstance(item, dict)
+                    else self._resolve_template(item, state_data)
+                    if isinstance(item, str)
+                    else item
+                    for item in value
+                ]
+            elif isinstance(value, str):
+                resolved[key] = self._resolve_template(value, state_data)
+            else:
+                resolved[key] = value
+        return resolved
 
     def execute(self, input_data: dict[str, Any] | None = None) -> dict[str, Any]:
         """Execute the flow.
@@ -260,6 +382,10 @@ class SimpleFlowEngine(BaseFlowEngine):
                 if key in self.state_manager.state_data:
                     input_data[key] = self.state_manager.state_data[key]
 
+        # Resolve template variables in input_data
+        state_data = self.state_manager.state_data
+        input_data = self._resolve_templates_in_dict(input_data, state_data)
+
         # Execute agent via runtime
         result = self.runtime.execute_agent(
             agent_id=agent_id,
@@ -297,6 +423,10 @@ class SimpleFlowEngine(BaseFlowEngine):
             for key in state_keys:
                 if key in self.state_manager.state_data:
                     payload[key] = self.state_manager.state_data[key]
+
+        # Resolve template variables in payload
+        state_data = self.state_manager.state_data
+        payload = self._resolve_templates_in_dict(payload, state_data)
 
         # Create action for tool execution
         action = {

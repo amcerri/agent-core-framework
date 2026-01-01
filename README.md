@@ -201,7 +201,7 @@ This project is licensed under the MIT License. See the [`LICENSE`](./LICENSE) f
 
 ## Contact
 
-Maintainer: [Artur M. Cerri](https://github.com/amcerri)  
+Maintainer: [Artur M.](https://github.com/amcerri)  
 Repository: [`https://github.com/amcerri/agent-core-framework`](https://github.com/amcerri/agent-core-framework)
 
 ---

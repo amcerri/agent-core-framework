@@ -1,0 +1,37 @@
+# Simple Flow Definition
+# Demonstrates basic flow orchestration with agent and tool nodes
+
+flow_id: "simple_flow"
+version: "1.0.0"
+entrypoint: "start"
+
+nodes:
+  start:
+    type: "agent"
+    agent_id: "query_agent"
+    input:
+      query: "{{input.query}}"
+
+  search:
+    type: "tool"
+    tool_id: "search_tool"
+    payload:
+      query: "{{node_start_result.output.query}}"
+
+  end:
+    type: "agent"
+    agent_id: "query_agent"
+    input:
+      query: "completed"
+
+transitions:
+  - from: "start"
+    to: "search"
+    condition:
+      status: "success"
+
+  - from: "search"
+    to: "end"
+    condition:
+      status: "success"
+
